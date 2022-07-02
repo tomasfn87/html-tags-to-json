@@ -10,7 +10,7 @@ class Html:
     
     reHtml = r"(?si)(\<)([a-z][a-z0-9]*\b)(\s*[^>]*)(\>)(.*?)(<\/)\2(\>)"
     reSimpleHtml = r"\<\/?([a-z][a-z0-9]*\b)\s*[^>]*\s*\>"
-    reTextAndTags = r"(?i)(.*?)(\<[a-z][a-z0-9]*\s?\/?\>)(.*)(<\/\2\>)?(.*?)"
+    reTextAndTags = r"(?i)(.*?)(\<[a-z][a-z0-9]*\s*[^>]*?\/?\>)(.*)(<\/\2\>)?(.*?)"
     reHtmlComment = r"(?si)(\<!--(.*)--\>)"
     reEmptySpacesBetweenTags = r"\>\s*\<"
     
