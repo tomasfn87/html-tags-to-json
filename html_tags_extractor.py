@@ -1,5 +1,8 @@
 import re
 import json
+from pygments import highlight, lexers, formatters
+from colorama import Fore
+from colorama import Style
 
 
 class Html:
@@ -7,13 +10,13 @@ class Html:
         self.html_string = html_string
         self.innerHtml = self.extractTagInnerHtml()
         self.content = self.extractHtmlTagAsDict()
-    
+
     reHtml = r"(?si)(\<)([a-z][a-z0-9]*\b)(\s*[^>]*)(\>)(.*?)(<\/)\2(\>)"
     reSimpleHtml = r"\<\/?([a-z][a-z0-9]*\b)\s*[^>]*\s*\>"
     reTextAndTags = r"(?i)(.*?)(\<[a-z][a-z0-9]*\s*[^>]*?\/?\>)(.*)(<\/\2\>)?(.*?)"
     reHtmlComment = r"(?si)(\<!--(.*)--\>)"
     reEmptySpacesBetweenTags = r"\>\s*\<"
-    
+
     def cleanHtml(html_string):
         clean = True
         cleanHtml = ''
@@ -35,9 +38,17 @@ class Html:
         if not self.doesStringContainTextAndTags():
             return False
         html = self.checkForMultipleTags()
-        if len(html) == 1:
-            html = html[0]
-        return json.dumps(html, indent=4)
+        return json.dumps(html, indent=2)
+
+    def printColoredHtmlTags(self):
+        if not self.doesStringContainTextAndTags():
+            print(False)
+        HTML = self.getHtmlTags()
+        if type(HTML) != bool: 
+            colored_json = highlight(HTML, lexers.JsonLexer(), formatters.TerminalFormatter())
+            print(colored_json)
+        else:
+            print(f"{Fore.GREEN}{self.html_string}{Style.RESET_ALL}")
 
     def extractTagInnerHtml(self):
         if not self.isHtmlTag():
@@ -82,7 +93,7 @@ class Html:
             if match[0] == self.html_string:
                 return True
         return False
-    
+
     def isHtmlComment(self):
         self.html_string = Html.cleanHtml(self.html_string)
         match = re.match(Html.reHtmlComment, self.html_string)
@@ -97,7 +108,7 @@ class Html:
             if re.match(Html.reHtml, content) or re.match(Html.reSimpleHtml, content):
                 return True
         return False
-    
+
     def doesStringContainTags(self):
         if self.isHtmlTag() or self.isSimpleHtmlTag():
             return True
@@ -107,7 +118,7 @@ class Html:
             if html or simpleHtml:
                 return True
         return False
-    
+
     def doesStringContainTextAndTags(self):
         textAndHtml = re.match(Html.reTextAndTags, self.html_string)
         if textAndHtml:
@@ -203,214 +214,69 @@ t15 = Html('<!-- This     is        a     comment! --><span><br>TEST</span>')
 t16 = Html('<span><br>TEST</span><!-- This     is        a     comment! -->')
 t17 = Html('<section><span><br>TEST</span><!-- This     is        a     comment! --></section>')
 
+tests = [ t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17 ]
 
 # print(' * Get HTML Tags')
-print('1', t1.getHtmlTags())
-print()
-print('2', t2.getHtmlTags())
-print()
-print('3', t3.getHtmlTags())
-print()
-print('4', t4.getHtmlTags())
-print()
-print('5', t5.getHtmlTags())
-print()
-print('6', t6.getHtmlTags())
-print()
-print('7', t7.getHtmlTags())
-print()
-print('8', t8.getHtmlTags())
-print()
-print('9', t9.getHtmlTags())
-print()
-print('10', t10.getHtmlTags())
-print()
-print('11', t11.getHtmlTags())
-print()
-print('12', t12.getHtmlTags())
-print()
-print('13', t13.getHtmlTags())
-print()
-print('14', t14.getHtmlTags())
-print()
-print('15', t15.getHtmlTags())
-print()
-print('16', t16.getHtmlTags())
-print()
-print('17', t17.getHtmlTags())
+# for i in range(0, len(tests)):
+#     if i > 0:
+#         print()
+#     print(f"{i+1})", end=' ')
+#     print(tests[i].getHtmlTags())
+# print()
 
-# print()
-# t1.getHtmlTags()
-# print()
-# t2.getHtmlTags()
-# print()
-# t3.getHtmlTags()
-# print()
-# t4.getHtmlTags()
-# print()
-# t5.getHtmlTags()
-# print()
-# t6.getHtmlTags()
-# print()
-# t7.getHtmlTags()
-# print()
-# t8.getHtmlTags()
-# print()
-# t9.getHtmlTags()
-# print()
-# t10.getHtmlTags()
-# print()
-# t11.getHtmlTags()
-# print()
-# t12.getHtmlTags()
-# print()
-# t13.getHtmlTags()
-# print()
-# t14.getHtmlTags()
-# print()
-# t15.getHtmlTags()
-# print()
-# t16.getHtmlTags()
-# print()
-# t17.getHtmlTags()
+print(' * Print Colored HTML Tags')
+for i in range(0, len(tests)):
+    if i > 0:
+        print()
+    print(f"{i+1})", end=" ")
+    tests[i].printColoredHtmlTags()
+print()
 
-# print()
 # print(' * Extract HTML Tags As Dict')
-# print('1', t1.extractHtmlTagAsDict())
-# print('2', t2.extractHtmlTagAsDict())
-# print('3', t3.extractHtmlTagAsDict())
-# print('4', t4.extractHtmlTagAsDict())
-# print('5', t5.extractHtmlTagAsDict())
-# print('6', t6.extractHtmlTagAsDict())
-# print('7', t7.extractHtmlTagAsDict())
-# print('8', t8.extractHtmlTagAsDict())
-# print('9', t9.extractHtmlTagAsDict())
-# print('10', t10.extractHtmlTagAsDict())
-# print('11', t11.extractHtmlTagAsDict())
-# print('12', t12.extractHtmlTagAsDict())
-# print('13', t13.extractHtmlTagAsDict())
-# print('14', t14.extractHtmlTagAsDict())
-# print('15', t15.extractHtmlTagAsDict())
-# print('16', t16.extractHtmlTagAsDict())
-# print('17', t17.extractHtmlTagAsDict())
-
+# for i in range(0, len(tests)):
+#     if i > 0:
+#         print()
+#     print(f"{i+1}) {tests[i].extractHtmlTagAsDict()}")
 # print()
+
 # print(' * Extract Tag Inner HTML')
-# # print('1', t1.extractTagInnerHtml())
-# # print('2', t2.extractTagInnerHtml())
-# # print('3', t3.extractTagInnerHtml())
-# # print('4', t4.extractTagInnerHtml())
-# print('5', t5.extractTagInnerHtml())
-# # print('6', t6.extractTagInnerHtml())
-# # print('7', t7.extractTagInnerHtml())
-# # print('8', t8.extractTagInnerHtml())
-# # print('9', t9.extractTagInnerHtml())
-# # print('10', t10.extractTagInnerHtml())
-# # print('11', t11.extractTagInnerHtml())
-# # print('12', t12.extractTagInnerHtml())
-# print('13', t13.extractTagInnerHtml())
-# print('14', t14.extractTagInnerHtml())
-# print('15', t15.extractTagInnerHtml())
-# print('16', t16.extractTagInnerHtml())
-# print('17', t17.extractTagInnerHtml())
-
+# for i in range(0, len(tests)):
+#     if i > 0:
+#         print()
+#     print(f"{i+1}) {tests[i].extractTagInnerHtml()}")
 # print()
+
 # print(' * Is HTML Tag')
-# # print('1', t1.isHtmlTag())
-# # print('2', t2.isHtmlTag())
-# # print('3', t3.isHtmlTag())
-# # print('4', t4.isHtmlTag())
-# print('5', t5.isHtmlTag())
-# # print('6', t6.isHtmlTag())
-# # print('7', t7.isHtmlTag())
-# # print('8', t8.isHtmlTag())
-# # print('9', t9.isHtmlTag())
-# # print('10', t10.isHtmlTag())
-# # print('11', t11.isHtmlTag())
-# # print('12', t12.isHtmlTag())
-# print('13', t13.isHtmlTag())
-# print('14', t14.isHtmlTag())
-# print('15', t15.isHtmlTag())
-# print('16', t16.isHtmlTag())
-# print('17', t17.isHtmlTag())
-
+# for i in range(0, len(tests)):
+#     if i > 0:
+#         print()
+#     print(f"{i+1}) {tests[i].isHtmlTag()}")
 # print()
+
 # print(' * Is Simple HTML Tag')
-# # print('1', t1.isSimpleHtmlTag())
-# # print('2', t2.isSimpleHtmlTag())
-# # print('3', t3.isSimpleHtmlTag())
-# # print('4', t4.isSimpleHtmlTag())
-# print('5', t5.isSimpleHtmlTag())
-# # print('6', t6.isSimpleHtmlTag())
-# # print('7', t7.isSimpleHtmlTag())
-# # print('8', t8.isSimpleHtmlTag())
-# # print('9', t9.isSimpleHtmlTag())
-# # print('10', t10.isSimpleHtmlTag())
-# # print('11', t11.isSimpleHtmlTag())
-# # print('12', t12.isSimpleHtmlTag())
-# print('13', t13.isSimpleHtmlTag())
-# print('14', t14.isSimpleHtmlTag())
-# print('15', t15.isSimpleHtmlTag())
-# print('16', t16.isSimpleHtmlTag())
-# print('17', t17.isSimpleHtmlTag())
-
+# for i in range(0, len(tests)):
+#     if i > 0:
+#         print()
+#     print(f"{i+1}) {tests[i].isSimpleHtmlTag()}")
 # print()
+
 # print(' * Does tag contain other tags')
-# # print('1', t1.doesTagContainOtherTags())
-# # print('2', t2.doesTagContainOtherTags())
-# # print('3', t3.doesTagContainOtherTags())
-# # print('4', t4.doesTagContainOtherTags())
-# print('5', t5.doesTagContainOtherTags())
-# # print('6', t6.doesTagContainOtherTags())
-# # print('7', t7.doesTagContainOtherTags())
-# # print('8', t8.doesTagContainOtherTags())
-# # print('9', t9.doesTagContainOtherTags())
-# # print('10', t10.doesTagContainOtherTags())
-# # print('11', t11.doesTagContainOtherTags())
-# # print('12', t12.doesTagContainOtherTags())
-# print('13', t13.doesTagContainOtherTags())
-# print('14', t14.doesTagContainOtherTags())
-# print('15', t15.doesTagContainOtherTags())
-# print('16', t16.doesTagContainOtherTags())
-# print('17', t17.doesTagContainOtherTags())
-
-
+# for i in range(0, len(tests)):
+#     if i > 0:
+#         print()
+#     print(f"{i+1}) {tests[i].doesTagContainOtherTags()}")
 # print()
+
+
 # print(' * Does string contain tags')
-# # print('1', t1.doesStringContainTags())
-# # print('2', t2.doesStringContainTags())
-# # print('3', t3.doesStringContainTags())
-# # print('4', t4.doesStringContainTags())
-# print('5', t5.doesStringContainTags())
-# # print('6', t6.doesStringContainTags())
-# # print('7', t7.doesStringContainTags())
-# # print('8', t8.doesStringContainTags())
-# # print('9', t9.doesStringContainTags())
-# # print('10', t10.doesStringContainTags())
-# # print('11', t11.doesStringContainTags())
-# # print('12', t12.doesStringContainTags())
-# print('13', t13.doesStringContainTags())
-# print('14', t14.doesStringContainTags())
-# print('15', t15.doesStringContainTags())
-# print('16', t16.doesStringContainTags())
-# print('17', t17.doesStringContainTags())
-
+# for i in range(0, len(tests)):
+#     if i > 0:
+#         print()
+#     print(f"{i+1}) {tests[i].doesStringContainTags()}")
 # print()
+
 # print(' * Does string contain text and tags')
-# # print('1', t1.doesStringContainTextAndTags())
-# # print('2', t2.doesStringContainTextAndTags())
-# # print('3', t3.doesStringContainTextAndTags())
-# # print('4', t4.doesStringContainTextAndTags())
-# print('5', t5.doesStringContainTextAndTags())
-# # print('6', t6.doesStringContainTextAndTags())
-# # print('7', t7.doesStringContainTextAndTags())
-# # print('8', t8.doesStringContainTextAndTags())
-# # print('9', t9.doesStringContainTextAndTags())
-# # print('10', t10.doesStringContainTextAndTags())
-# # print('11', t11.doesStringContainTextAndTags())
-# # print('12', t12.doesStringContainTextAndTags())
-# print('13', t13.doesStringContainTextAndTags())
-# print('14', t14.doesStringContainTextAndTags())
-# print('15', t15.doesStringContainTextAndTags())
-# print('16', t16.doesStringContainTextAndTags())
-# print('17', t17.doesStringContainTextAndTags())
+# for i in range(0, len(tests)):
+#     if i > 0:
+#         print()
+#     print(f"{i+1}) {tests[i].doesStringContainTextAndTags()}")
