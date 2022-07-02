@@ -10,7 +10,8 @@ class Html:
     
     reHtml = r"(?si)(\<)([a-z][a-z0-9]*\b)(\s*[^>]*)(\>)(.*?)(<\/)\2(\>)"
     reSimpleHtml = r"\<\/?([a-z][a-z0-9]*\b)\s*[^>]*\s*\>"
-    reTextAndTags = r"(?i)([^<]*?)(\<.*\>)(.*)(<\/\2\>)?([^>]*?)"
+    reTextAndTags = r"(?i)(.*?)(\<[a-z][a-z0-9]*\s?\/?\>)(.*)(<\/\2\>)?(.*?)"
+    reHtmlComment = r"(?si)(\<!--(.*)--\>)"
     reEmptySpacesBetweenTags = r"\>\s*\<"
     
     def cleanHtml(html_string):
@@ -59,6 +60,10 @@ class Html:
             tagName = tag[1]
             cleanTag = Html.cleanHtml((tag[0]))
             return { 'name': tagName, 'content':  cleanTag }
+        elif self.isHtmlComment():
+            tag = re.match(Html.reHtmlComment, self.html_string)
+            tagName = 'comment'
+            return { 'name': tagName, 'content':  tag[0] }
         else:
             tag = self.html_string
             return tag
@@ -74,6 +79,14 @@ class Html:
     def isSimpleHtmlTag(self):
         self.html_string = Html.cleanHtml(self.html_string)
         match = re.match(Html.reSimpleHtml, self.html_string)
+        if match:
+            if match[0] == self.html_string:
+                return True
+        return False
+    
+    def isHtmlComment(self):
+        self.html_string = Html.cleanHtml(self.html_string)
+        match = re.match(Html.reHtmlComment, self.html_string)
         if match:
             if match[0] == self.html_string:
                 return True
@@ -116,6 +129,7 @@ class Html:
                 html = re.match(Html.reHtml, self.html_string)
                 simpleHtml = re.match(Html.reSimpleHtml, self.html_string)
                 textAndTags = re.match(Html.reTextAndTags, self.html_string)
+                htmlComment = re.match(Html.reHtmlComment, self.html_string)
                 if html and simpleHtml:
                     if simpleHtml.span() < html.span():
                         tag = Html.cleanHtml(html[0])
@@ -131,6 +145,10 @@ class Html:
                     self.html_string = self.html_string.replace(tag, '', 1)
                 elif simpleHtml:
                     tag = Html.cleanHtml(simpleHtml[0])
+                    tags.append(Html(tag).extractHtmlTagAsDict())
+                    self.html_string = self.html_string.replace(tag, '', 1)
+                elif htmlComment:
+                    tag = Html.cleanHtml(htmlComment[0])
                     tags.append(Html(tag).extractHtmlTagAsDict())
                     self.html_string = self.html_string.replace(tag, '', 1)
                 elif textAndTags:
@@ -182,6 +200,8 @@ t11 = Html("<body onload='myFunction'><div><h1>*** Hello</h1><p>World! ***</p></
 t12 = Html('<div><h1>*** Hello</h1><p>World! ***</p></div><footer><p></p></footer>')
 t13 = Html('<p>Just</p>')
 t14 = Html('<br><span><br>test</span>')
+t15 = Html('<!-- This     is        a     comment! --><span><br>TEST</span>')
+t16 = Html('<span><br>TEST</span><!-- This     is        a     comment! -->')
 
 # print(t13.isHtmlTag())
 # print(t14.isHtmlTag())
@@ -214,6 +234,10 @@ print()
 print('13', t13.getHtmlTags())
 print()
 print('14', t14.getHtmlTags())
+print()
+print('15', t15.getHtmlTags())
+print()
+print('16', t16.getHtmlTags())
 
 
 # print()
@@ -244,6 +268,10 @@ print('14', t14.getHtmlTags())
 # t13.getHtmlTags()
 # print()
 # t14.getHtmlTags()
+# print()
+# t15.getHtmlTags()
+# print()
+# t16.getHtmlTags()
 
 # print()
 # print(' * Extract HTML Tags As Dict')
@@ -261,6 +289,8 @@ print('14', t14.getHtmlTags())
 # print('12', t12.extractHtmlTagAsDict())
 # print('13', t13.extractHtmlTagAsDict())
 # print('14', t14.extractHtmlTagAsDict())
+# print('15', t15.extractHtmlTagAsDict())
+# print('16', t16.extractHtmlTagAsDict())
 
 # print()
 # print(' * Extract Tag Inner HTML')
@@ -278,6 +308,8 @@ print('14', t14.getHtmlTags())
 # # print('12', t12.extractTagInnerHtml())
 # print('13', t13.extractTagInnerHtml())
 # print('14', t14.extractTagInnerHtml())
+# print('15', t15.extractTagInnerHtml())
+# print('16', t16.extractTagInnerHtml())
 
 # print()
 # print(' * Is HTML Tag')
@@ -295,6 +327,8 @@ print('14', t14.getHtmlTags())
 # # print('12', t12.isHtmlTag())
 # print('13', t13.isHtmlTag())
 # print('14', t14.isHtmlTag())
+# print('15', t15.isHtmlTag())
+# print('16', t16.isHtmlTag())
 
 # print()
 # print(' * Is Simple HTML Tag')
@@ -312,6 +346,8 @@ print('14', t14.getHtmlTags())
 # # print('12', t12.isSimpleHtmlTag())
 # print('13', t13.isSimpleHtmlTag())
 # print('14', t14.isSimpleHtmlTag())
+# print('15', t15.isSimpleHtmlTag())
+# print('16', t16.isSimpleHtmlTag())
 
 # print()
 # print(' * Does tag contain other tags')
@@ -329,6 +365,8 @@ print('14', t14.getHtmlTags())
 # # print('12', t12.doesTagContainOtherTags())
 # print('13', t13.doesTagContainOtherTags())
 # print('14', t14.doesTagContainOtherTags())
+# print('15', t15.doesTagContainOtherTags())
+# print('16', t16.doesTagContainOtherTags())
 
 
 # print()
@@ -347,6 +385,8 @@ print('14', t14.getHtmlTags())
 # # print('12', t12.doesStringContainTags())
 # print('13', t13.doesStringContainTags())
 # print('14', t14.doesStringContainTags())
+# print('15', t15.doesStringContainTags())
+# print('16', t16.doesStringContainTags())
 
 # print()
 # print(' * Does string contain text and tags')
@@ -364,5 +404,7 @@ print('14', t14.getHtmlTags())
 # # print('12', t12.doesStringContainTextAndTags())
 # print('13', t13.doesStringContainTextAndTags())
 # print('14', t14.doesStringContainTextAndTags())
+# print('15', t15.doesStringContainTextAndTags())
+# print('16', t16.doesStringContainTextAndTags())
 
 
