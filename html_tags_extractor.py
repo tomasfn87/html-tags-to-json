@@ -62,8 +62,7 @@ class Html:
             return { 'name': tagName, 'content':  cleanTag }
         elif self.isHtmlComment():
             tag = re.match(Html.reHtmlComment, self.html_string)
-            tagName = 'comment'
-            return { 'name': tagName, 'content':  tag[0] }
+            return { 'comment':  tag[0] }
         else:
             tag = self.html_string
             return tag
