@@ -1,4 +1,4 @@
-import re
+import regex
 import json
 from pygments import highlight, lexers, formatters
 from colorama import Fore
@@ -11,10 +11,11 @@ class Html:
         self.innerHtml = self.extractTagInnerHtml()
         self.content = self.extractHtmlTagAsDict()
 
-    reHtml = r"(?i)\<\s*([a-z][a-z0-9]*\b)[^>]*\s*\>(.*)(<\/\s*\1\s*>)"
+    simple_tags = [ 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr' ]
+    reHtml = r"(?i)(\<\s*)([a-z][a-z0-9]*)([^>]*)(\>)(.*?(?R)?)(\<\/)\2[^>]*(\>)"
     reSimpleHtml = r"\<\/?([a-z][a-z0-9]*\b)\s*[^>]*\s*\>"
     reTextAndTags = r"(?i)(.*?)(\<[a-z][a-z0-9]*\s*[^>]*?\/?\>)(.*)(<\/\2\>)?(.*?)"
-    reHtmlComment = r"(?si)(\<!--(.*)--\>)"
+    reHtmlComment = r"(?si)(\<!--(.*?)--\>)"
     reEmptySpacesBetweenTags = r"\>\s*\<"
 
     def cleanHtml(html_string):
@@ -32,12 +33,12 @@ class Html:
                 if html_string[i] not in ['\n', '\t', '\r']:
                     cleanHtml += html_string[i]
 
-        return re.sub(Html.reEmptySpacesBetweenTags, '><', cleanHtml)
+        return regex.sub(Html.reEmptySpacesBetweenTags, '><', cleanHtml)
 
     def getHtmlTags(self):
         if not self.doesStringContainTextAndTags():
             return False
-        html = self.checkForMultipleTags()
+        html = self.parseHtmlTags()
         return json.dumps(html, indent=2)
 
     def printColoredHtmlTags(self):
@@ -54,48 +55,47 @@ class Html:
         if not self.isHtmlTag():
             return ''
         else:
-            match = re.match(Html.reHtml, self.html_string)
-            return match[2]
+            match = regex.match(Html.reHtml, self.html_string)
+            return match[5]
 
     def extractHtmlTagAsDict(self):
         if self.isHtmlTag():
-            tag = re.match(Html.reHtml, self.html_string)
-            tagName = tag[1]
+            tag = regex.match(Html.reHtml, self.html_string)
+            tagName = tag[2]
             cleanTag = Html.cleanHtml(tag[0])
             if self.innerHtml:
-                return { 'name': tagName, 'content': cleanTag, 'innerHtml': Html(self.innerHtml).checkForMultipleTags() }
+                return { 'name': tagName, 'content': cleanTag, 'innerHtml': Html(self.innerHtml).parseHtmlTags() }
             return { 'name': tagName, 'content':  cleanTag }
         elif self.isSimpleHtmlTag():
-            tag = re.match(Html.reSimpleHtml, self.html_string)
+            tag = regex.match(Html.reSimpleHtml, self.html_string)
             tagName = tag[1]
             cleanTag = Html.cleanHtml((tag[0]))
             return { 'name': tagName, 'content':  cleanTag }
         elif self.isHtmlComment():
-            tag = re.match(Html.reHtmlComment, self.html_string)
+            tag = regex.match(Html.reHtmlComment, self.html_string)
             return { 'comment':  tag[0] }
         else:
-            tag = self.html_string
-            return tag
+            return self.html_string
 
     def isHtmlTag(self):
         self.html_string = Html.cleanHtml(self.html_string)
-        match = re.match(Html.reHtml, self.html_string)
-        if match:
-            if Html.cleanHtml(match[0]) == self.html_string:
+        html = regex.match(Html.reHtml, self.html_string)
+        if html:
+            if Html.cleanHtml(html[0]) == self.html_string:
                 return True
         return False
 
     def isSimpleHtmlTag(self):
         self.html_string = Html.cleanHtml(self.html_string)
-        match = re.match(Html.reSimpleHtml, self.html_string)
+        match = regex.match(Html.reSimpleHtml, self.html_string)
         if match:
-            if match[0] == self.html_string:
+            if match[0] == self.html_string and match[1] in Html.simple_tags:
                 return True
         return False
 
     def isHtmlComment(self):
         self.html_string = Html.cleanHtml(self.html_string)
-        match = re.match(Html.reHtmlComment, self.html_string)
+        match = regex.match(Html.reHtmlComment, self.html_string)
         if match:
             if match[0] == self.html_string:
                 return True
@@ -104,7 +104,7 @@ class Html:
     def doesTagContainOtherTags(self):
         content = self.extractTagInnerHtml()
         if content:
-            if re.match(Html.reHtml, content) or re.match(Html.reSimpleHtml, content):
+            if regex.match(Html.reHtml, content) or regex.match(Html.reSimpleHtml, content):
                 return True
         return False
 
@@ -112,66 +112,63 @@ class Html:
         if self.isHtmlTag() or self.isSimpleHtmlTag():
             return True
         else:
-            html = re.match(Html.reHtml, self.html_string)
-            simpleHtml = re.findall(Html.reSimpleHtml, self.html_string)
+            html = regex.match(Html.reHtml, self.html_string)
+            simpleHtml = regex.findall(Html.reSimpleHtml, self.html_string)
             if html or simpleHtml:
                 return True
         return False
 
     def doesStringContainTextAndTags(self):
-        textAndHtml = re.match(Html.reTextAndTags, self.html_string)
+        textAndHtml = regex.match(Html.reTextAndTags, self.html_string)
         if textAndHtml:
             return True
         return False
 
-    def checkForMultipleTags(self):
+    def parseHtmlTags(self):
         if self.isSimpleHtmlTag():
             return self.extractHtmlTagAsDict()
         elif not self.doesStringContainTextAndTags():
             return self.html_string
         tags = []
-        if self.isHtmlTag():
-            tags.append(self.extractHtmlTagAsDict())
-        else:
-            while self.html_string:
-                self.html_string = self.html_string
-                html = re.match(Html.reHtml, self.html_string)
-                simpleHtml = re.match(Html.reSimpleHtml, self.html_string)
-                textAndTags = re.match(Html.reTextAndTags, self.html_string)
-                htmlComment = re.match(Html.reHtmlComment, self.html_string)
-                if html and simpleHtml:
-                    if simpleHtml.span() < html.span():
-                        tag = Html.cleanHtml(html[0])
-                        tags.append(Html(tag).extractHtmlTagAsDict())
-                        self.html_string = self.html_string.replace(tag, '', 1)
-                    elif simpleHtml.span() > html.span():
-                        tag = Html.cleanHtml(simpleHtml[0])
-                        tags.append(Html(tag).extractHtmlTagAsDict())
-                        self.html_string = self.html_string.replace(tag, '', 1)
-                elif html:
+        self.html_string = Html.cleanHtml(self.html_string)
+        while self.html_string:
+            html = regex.match(Html.reHtml, self.html_string)
+            simpleHtml = regex.match(Html.reSimpleHtml, self.html_string)
+            textAndTags = regex.match(Html.reTextAndTags, self.html_string)
+            htmlComment = regex.match(Html.reHtmlComment, self.html_string)
+            if html and simpleHtml:
+                if simpleHtml.span() < html.span():
                     tag = Html.cleanHtml(html[0])
                     tags.append(Html(tag).extractHtmlTagAsDict())
                     self.html_string = self.html_string.replace(tag, '', 1)
-                elif simpleHtml:
+                elif simpleHtml.span() > html.span():
                     tag = Html.cleanHtml(simpleHtml[0])
                     tags.append(Html(tag).extractHtmlTagAsDict())
                     self.html_string = self.html_string.replace(tag, '', 1)
-                elif htmlComment:
-                    tag = Html.cleanHtml(htmlComment[0])
+            elif self.isHtmlTag():
+                tag = Html.cleanHtml(html[0])
+                tags.append(Html(tag).extractHtmlTagAsDict())
+                self.html_string = self.html_string.replace(tag, '', 1)
+            elif simpleHtml:
+                tag = Html.cleanHtml(simpleHtml[0])
+                tags.append(Html(tag).extractHtmlTagAsDict())
+                self.html_string = self.html_string.replace(tag, '', 1)
+            elif htmlComment:
+                tag = Html.cleanHtml(htmlComment[0])
+                tags.append(Html(tag).extractHtmlTagAsDict())
+                self.html_string = self.html_string.replace(tag, '', 1)
+            elif textAndTags:
+                tag = self.html_string.split('<')[0]
+                if tag:
                     tags.append(Html(tag).extractHtmlTagAsDict())
-                    self.html_string = self.html_string.replace(tag, '', 1)
-                elif textAndTags:
-                    tag = self.html_string.split('<')[0]
+                else:
+                    tag = self.html_string.split('>')[0]
                     if tag:
                         tags.append(Html(tag).extractHtmlTagAsDict())
-                    else:
-                        tag = self.html_string.split('>')[0]
-                        if tag:
-                            tags.append(Html(tag).extractHtmlTagAsDict())
-                    self.html_string = self.html_string.replace(tag, '', 1)
-                else:
-                    tags.append(self.html_string)
-                    self.html_string = self.html_string.replace(self.html_string, '', 1)
+                self.html_string = self.html_string.replace(tag, '', 1)
+            else:
+                tags.append(self.html_string)
+                self.html_string = self.html_string.replace(self.html_string, '', 1)
         if len(tags) > 1:
             return tags
         return tags[0]
@@ -213,8 +210,15 @@ t15 = Html('<!-- This     is        a     comment! --><span><br>TEST</span>')
 t16 = Html('<section><span><br>TEST</span><!-- This     is        a     comment! --></section>')
 t17 = Html('<div><div><p>Hello<p>World</p></p><div></div></div></div>')
 t18 = Html('<div><div><div></div></div></div>')
+t19 = Html('<script src="myGood.js" type="text/javascript"></script><script src="myOld.js" type="text/gtmscript"></script>')
+t20 = Html('<div><div></div><div></div></div>')
+t21 = Html('<div><img src="test.jpg"></div><div><span>TEST</span></div>')
+t22 = Html('<div><div>HELLO<br>WORLD!</div><div></div></div>')
 
-tests = [ t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18 ]
+tests = [
+    t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16,
+    t17, t18, t19, t20, t21, t22
+]
 
 # print(' * Get HTML Tags')
 # for i in range(0, len(tests)):
