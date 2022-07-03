@@ -11,7 +11,7 @@ class Html:
         self.innerHtml = self.extractTagInnerHtml()
         self.content = self.extractHtmlTagAsDict()
 
-    reHtml = r"(?si)(\<)([a-z][a-z0-9]*\b)(\s*[^>]*)(\>)(.*?)(<\/)\2(\>)"
+    reHtml = r"(?i)\<\s*([a-z][a-z0-9]*\b)[^>]*\s*\>(.*)(<\/\s*\1\s*>)"
     reSimpleHtml = r"\<\/?([a-z][a-z0-9]*\b)\s*[^>]*\s*\>"
     reTextAndTags = r"(?i)(.*?)(\<[a-z][a-z0-9]*\s*[^>]*?\/?\>)(.*)(<\/\2\>)?(.*?)"
     reHtmlComment = r"(?si)(\<!--(.*)--\>)"
@@ -32,7 +32,7 @@ class Html:
                 if html_string[i] not in ['\n', '\t', '\r']:
                     cleanHtml += html_string[i]
 
-        return re.sub(Html.reEmptySpacesBetweenTags, '><', cleanHtml).strip()
+        return re.sub(Html.reEmptySpacesBetweenTags, '><', cleanHtml)
 
     def getHtmlTags(self):
         if not self.doesStringContainTextAndTags():
@@ -53,15 +53,14 @@ class Html:
     def extractTagInnerHtml(self):
         if not self.isHtmlTag():
             return ''
-        if self.isHtmlTag():
+        else:
             match = re.match(Html.reHtml, self.html_string)
-            return match[5]
-        return ''
+            return match[2]
 
     def extractHtmlTagAsDict(self):
         if self.isHtmlTag():
             tag = re.match(Html.reHtml, self.html_string)
-            tagName = tag[2]
+            tagName = tag[1]
             cleanTag = Html.cleanHtml(tag[0])
             if self.innerHtml:
                 return { 'name': tagName, 'content': cleanTag, 'innerHtml': Html(self.innerHtml).checkForMultipleTags() }
@@ -173,7 +172,7 @@ class Html:
                 else:
                     tags.append(self.html_string)
                     self.html_string = self.html_string.replace(self.html_string, '', 1)
-        if len(tags) >= 1:
+        if len(tags) > 1:
             return tags
         return tags[0]
 
@@ -200,7 +199,7 @@ t1 = Html(test1)
 t2 = Html(test2)
 t3 = Html("<img src='test.gif'>")
 t4 = Html('<head><title>Test</title></head>')
-t5 = Html('<div><p>Just</p>a<span><br>test</span></div>')
+t5 = Html('<div><p>Just</p>a<span><br>test</span></div>TEST')
 t6 = Html('<span><img src="test.gif"></span>')
 t7 = Html('<footer></footer><p></p>')
 t8 = Html('<br>')
@@ -211,10 +210,11 @@ t12 = Html('<div><h1>*** Hello</h1><p>World! ***</p></div><footer><p></p></foote
 t13 = Html('<p>Just</p>')
 t14 = Html('<br><span><br>test</span>')
 t15 = Html('<!-- This     is        a     comment! --><span><br>TEST</span>')
-t16 = Html('<span><br>TEST</span><!-- This     is        a     comment! -->')
-t17 = Html('<section><span><br>TEST</span><!-- This     is        a     comment! --></section>')
+t16 = Html('<section><span><br>TEST</span><!-- This     is        a     comment! --></section>')
+t17 = Html('<div><div><p>Hello<p>World</p></p><div></div></div></div>')
+t18 = Html('<div><div><div></div></div></div>')
 
-tests = [ t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17 ]
+tests = [ t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18 ]
 
 # print(' * Get HTML Tags')
 # for i in range(0, len(tests)):
