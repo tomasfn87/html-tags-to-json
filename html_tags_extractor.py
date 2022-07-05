@@ -12,7 +12,7 @@ class Html:
         self.content = self.extractHtmlTagAsDict()
 
     simple_tags = [ 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr' ]
-    reHtml = r"(?i)(\<\s*)([a-z][a-z0-9]*)([^>]*)(\>)(.*?(?R)?)(\<\/)\2[^>]*(\>)"
+    reHtml = r"(?i)(\<\s*)([a-z][a-z0-9]*)([^>]*)(\>)(.*?(?R)*)(\<\/)\2[^>]*(\>)"
     reSimpleHtml = r"\<\/?([a-z][a-z0-9]*\b)\s*[^>]*\s*\>"
     reTextAndTags = r"(?i)(.*?)(\<[a-z][a-z0-9]*\s*[^>]*?\/?\>)(.*)(<\/\2\>)?(.*?)"
     reHtmlComment = r"(?si)(\<!--(.*?)--\>)"
