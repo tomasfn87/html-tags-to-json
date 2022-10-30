@@ -61,3 +61,41 @@ myOnlyTextContent.extractHtmlTagAsDict()
 ```python
 'This is not HTML.'
 ```
+
+<br><br>
+
+_If there's_ `HTML` _content mixed with text and comments_, _the main extraction function_ (`extractHtmlTagAsDict`) _will return an_ `array` _with each tag, text and comment_:
+
+```python
+myHtmlAndTextContent = Html('''
+    <p>
+        This is a paragraph.<br>
+    </p>
+    This is text with HTML (and a comment).
+    <!-- A comment -->
+''')
+myHtmlAndTextContent.extractHtmlTagAsDict()
+```
+
+*__Output__*:
+
+```python
+[
+    {
+        name: 'p':,
+        content: '<p>This is a paragraph.<br></p>',
+        innerHtml: [
+            'This is a paragraph.',
+            {
+                name: 'br',
+                content: '<br>'
+            }
+        ]
+    },
+    'This is text with HTML (and a comment).',
+    {
+        comment: '<!-- A comment -->',
+    }
+]
+```
+
