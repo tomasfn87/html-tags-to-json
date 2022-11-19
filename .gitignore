@@ -130,3 +130,6 @@ dmypy.json
 
 #vcsode
 *.vscode*
+
+# asdf folder
+.tool-versions
